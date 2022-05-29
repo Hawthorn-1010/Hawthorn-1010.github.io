@@ -13,11 +13,11 @@
 
     <title>
         
-          
+          实现小型LSM数据库 - undefined
         
     </title>
 
-    <link rel="canonical" href="http://example.com/archives/2022/">
+    <link rel="canonical" href="http://example.com/2022/05/28/实现小型LSM数据库/">
 
     <!-- Bootstrap Core CSS -->
     
@@ -153,7 +153,146 @@
 
 
     <!-- Main Content -->
-    <!-- Default Archive layout, we use archives instead. -->
+    
+<!-- Image to hack wechat -->
+<!-- <img src="http://example.com/img/icon_wechat.png" width="0" height="0"> -->
+<!-- <img src="{{ site.baseurl }}/{% if page.header-img %}{{ page.header-img }}{% else %}{{ site.header-img }}{% endif %}" width="0" height="0"> -->
+
+<!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        background-image: url('/undefined')
+    }
+</style>
+<header class="intro-header" >
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <div class="tags">
+                        
+                          <a class="tag" href="/tags/#数据库" title="数据库">数据库</a>
+                        
+                    </div>
+                    <h1>实现小型LSM数据库</h1>
+                    <h2 class="subheading"></h2>
+                    <span class="meta">
+                        Posted by Laiaike on
+                        2022-05-28
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+    <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <h4 id="LSM-Tree"><a href="#LSM-Tree" class="headerlink" title="LSM-Tree"></a>LSM-Tree</h4><p>LSM-Tree（Log Structrued-Merge Tree）是很多NoSQL的底层引擎实现，比如LevelDB，HBase，Cassandra等等。</p>
+<p>LSM-Tree是一种分层，有序，面向磁盘的结构，主要利用的是，<strong>磁盘顺序写的速度比随机写高出很多</strong>。比如Log顺序写入的方法，通过append追加写入。这种结构写入速度很快，但是缺点是它牺牲了部分读性能，对随机读取不友好，所以这种结构更适用于<strong>读少写多</strong>的情景。例如：</p>
+<ol>
+<li><p>数据是被整体访问的，如&#x2F;数据库的WAL机制。</p>
+</li>
+<li><p>数据是通过文件偏移量访问到的，如Kafka。</p>
+</li>
+</ol>
+<h4 id="SSTable"><a href="#SSTable" class="headerlink" title="SSTable"></a>SSTable</h4><p>SSTable（Sorted String Table，排序字符串表）是LSM-Tree中核心的数据结构，具有持久化，有序，不可变的特点。</p>
+<p><img src="/LSM-Tree.png" alt="LSM-Tree.png"></p>
+<p>在LSM-Tree中写入数据的步骤如下：</p>
+<ol>
+<li><p>收到写请求时，会先把数据记录到WAL上，用作故障恢复。</p>
+</li>
+<li><p>写完WAL后，写入内存中的SSTable中（删除的话是用墓碑标记），也成为Memtable。</p>
+</li>
+<li><p>Memtable达到一定的大小后会在内存中被冻结，不可变，同时生成一个新的Memtable服务。</p>
+</li>
+<li><p>被冻结的Memtable写入硬盘上的SSTable，这个步骤也叫做Minor Compaction。需要注意的是，L0层的SSTable是没有进行合并的，所以这里的key range在多个SSTable中可能出现重叠。</p>
+</li>
+<li><p>当每层的磁盘上的SSTable的体积超过一定的大小或者个数，也会周期的进行合并。这个步骤也称为Major Compaction，这个阶段会真正的清除掉被标记删除掉的数据以及多版本数据的合并，避免浪费空间。由于SSTable都是有序的，也可以直接采用merge sort进行高效合并。</p>
+</li>
+</ol>
+<p>在LSM-Tree中又是如何读取数据的呢？</p>
+<ul>
+<li>答案是，首先在内存中进行寻找，如果没有查询到，就逐个Level进行查找。</li>
+</ul>
+<p>所以，在寻找的时候的最坏情况是，需要把所有的Level都查询一遍。如果Level的层数多，应该如何进行优化呢？</p>
+<ol>
+<li><p>压缩</p>
+<p>SSTable可以启动压缩功能，不过不是整个SSTable一起压缩，是根据localiy将数据分组后进行压缩。</p>
+</li>
+<li><p>缓存</p>
+<p>SSTable在写入磁盘后，除了Compaction之外，是不会变化的，所以我可以将Scan的Block进行缓存，从而提高检索的效率。</p>
+</li>
+<li><p>索引</p>
+<p>通过布隆过滤器判断一个SSTable是否存在某个key，减少不必要的磁盘扫描。</p>
+</li>
+<li><p>合并</p>
+<p>Compaction可以提高磁盘利用率，但是十分消耗CPU和磁盘IO。</p>
+</li>
+</ol>
+<h4 id="和B-树的比较"><a href="#和B-树的比较" class="headerlink" title="和B+树的比较"></a>和B+树的比较</h4><ul>
+<li><p>在数据的更新和删除方面，B+树支持原地更新删除数据，LSM-Tree只能追加写入。</p>
+</li>
+<li><p>LSM-Tree适用于写多读少的情况，而B+树的设计在读取数据的时候更快，在修改数据的时候，因为涉及索引的维护，页分裂合并等情况，性能会降低。</p>
+</li>
+</ul>
+
+
+                <hr>
+
+                
+
+                <ul class="pager">
+                    
+                    
+                        <li class="next">
+                            <a href="/2022/05/27/hello-world/" data-toggle="tooltip" data-placement="top" title="hello world">Next Post &rarr;</a>
+                        </li>
+                    
+                </ul>
+
+                
+
+                
+
+            </div>
+    <!-- Side Catalog Container -->
+        
+
+    <!-- Sidebar Container -->
+
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+
+                <!-- Friends Blog -->
+                
+            </div>
+
+        </div>
+    </div>
+</article>
+
+
+
+
+
+
+
+
 
     <!-- Footer -->
     <!-- Footer -->
