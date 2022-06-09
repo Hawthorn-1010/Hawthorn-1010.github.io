@@ -92,8 +92,11 @@
                     
 
                         
+                    
+
+                        
                         <li>
-                            <a href="/archives/">Archives</a>
+                            <a href="/about/">About</a>
                         </li>
                         
                     
@@ -107,11 +110,8 @@
 
                         
                         <li>
-                            <a href="/about/">About</a>
+                            <a href="/archives/">Archives</a>
                         </li>
-                        
-                    
-
                         
                     
                     
@@ -198,14 +198,26 @@
                 post-container">
 
                 <h4 id="LSM-Tree"><a href="#LSM-Tree" class="headerlink" title="LSM-Tree"></a>LSM-Tree</h4><p>LSM-Tree（Log Structrued-Merge Tree）是很多NoSQL的底层引擎实现，比如LevelDB，HBase，Cassandra等等。</p>
-<p>LSM-Tree是一种分层，有序，面向磁盘的结构，主要利用的是，<strong>磁盘顺序写的速度比随机写高出很多</strong>。比如Log顺序写入的方法，通过append追加写入。这种结构写入速度很快，但是缺点是它牺牲了部分读性能，对随机读取不友好，所以这种结构更适用于<strong>读少写多</strong>的情景。例如：</p>
+<p>LSM-Tree是一种分层，有序，面向磁盘的结构，主要利用的是，<strong>磁盘顺序写的速度比随机写高出很多</strong>（两个数量级）。比如Log顺序写入的方法，通过append追加写入。这种结构写入速度很快，但是缺点是它牺牲了部分读性能，对随机读取不友好，所以这种结构更适用于<strong>读少写多</strong>的情景。例如：</p>
 <ol>
 <li><p>数据是被整体访问的，如&#x2F;数据库的WAL机制。</p>
 </li>
 <li><p>数据是通过文件偏移量访问到的，如Kafka。</p>
 </li>
 </ol>
-<h4 id="SSTable"><a href="#SSTable" class="headerlink" title="SSTable"></a>SSTable</h4><p>SSTable（Sorted String Table，排序字符串表）是LSM-Tree中核心的数据结构，具有持久化，有序，不可变的特点。</p>
+<h4 id="SSTable"><a href="#SSTable" class="headerlink" title="SSTable"></a>SSTable</h4><p>SSTable（Sorted String Table，排序字符串表）是LSM-Tree中核心的数据结构，具有持久化，有序，不可变的特点。这种结构的好处：</p>
+<ol>
+<li><p>内存中只需要记录稀疏索引，减少了内存索引的大小</p>
+</li>
+<li><p>查询操作无需扫描整个日志，减少了磁盘IO</p>
+</li>
+<li><p>支持区间查询</p>
+</li>
+</ol>
+<blockquote>
+<p>密集索引中每一个搜索码值都对应一个索引值，密集索引决定了表的物理排序，一个表只有一个物理排序，所以一个表只能创建一个密集索引。占用存储空间更大，搜索时间更短。</p>
+<p>稀疏索引中只为某些搜索码值创建索引值，占用的存储空间较小，搜索时间更长。</p>
+</blockquote>
 <p><img src="/2022/05/28/%E5%AE%9E%E7%8E%B0%E5%B0%8F%E5%9E%8BLSM%E6%95%B0%E6%8D%AE%E5%BA%93/LSM-Tree.png"></p>
 <p>在LSM-Tree中写入数据的步骤如下：</p>
 <ol>
@@ -245,6 +257,8 @@
 <li><p>LSM-Tree适用于写多读少的情况，而B+树的设计在读取数据的时候更快，在修改数据的时候，因为涉及索引的维护，页分裂合并等情况，性能会降低。</p>
 </li>
 </ul>
+<h4 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h4><h5 id="SSTable的文件格式"><a href="#SSTable的文件格式" class="headerlink" title="SSTable的文件格式"></a>SSTable的文件格式</h5><p>分为三个区：数据区，稀疏索引区，文件索引区。根据命令，而不是数据进行存储（与持久化有关）。</p>
+<p>写入时 key 会按照任意顺序出现，那么如何保证 SSTable 中的 key 是有序的呢？一个简单方便的方式就是先保存到内存的红黑树（通过TreeMap实现）中，红黑树是有序的，然后再写入到日志文件里面。</p>
 
 
                 <hr>
@@ -252,6 +266,10 @@
                 
 
                 <ul class="pager">
+                    
+                        <li class="previous">
+                            <a href="/2022/05/31/持续记录/" data-toggle="tooltip" data-placement="top" title="持续记录">&larr; Previous Post</a>
+                        </li>
                     
                     
                         <li class="next">
