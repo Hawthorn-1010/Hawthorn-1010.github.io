@@ -13,11 +13,11 @@
 
     <title>
         
-          About - Laiaike&#39;s Blog
+          post - Laiaike&#39;s Blog
         
     </title>
 
-    <link rel="canonical" href="https://laiaike.site/about/">
+    <link rel="canonical" href="https://laiaike.site/2022/11/22/随便记点/">
 
     <!-- Bootstrap Core CSS -->
     
@@ -153,124 +153,104 @@
 
 
     <!-- Main Content -->
-    <!-- Page Header -->
-<header class="intro-header" style="background-image: url('/img/about-bg.jpg')">
+    
+<!-- Image to hack wechat -->
+<!-- <img src="https://laiaike.site/img/icon_wechat.png" width="0" height="0"> -->
+<!-- <img src="{{ site.baseurl }}/{% if page.header-img %}{{ page.header-img }}{% else %}{{ site.header-img }}{% endif %}" width="0" height="0"> -->
+
+<!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        background-image: url('/img/home-bg.jpg')
+    }
+</style>
+<header class="intro-header" >
     <div class="container">
         <div class="row">
-            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1 ">
-                <div class="site-heading">
-                    <h1>About</h1>
-                    <!--<hr class="small">-->
-                    <span class="subheading">Hi, I&#39;am Laiaike.</span>
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <div class="tags">
+                        
+                          <a class="tag" href="/tags/#Java" title="Java">Java</a>
+                        
+                    </div>
+                    <h1>post</h1>
+                    <h2 class="subheading"></h2>
+                    <span class="meta">
+                        Posted by Laiaike on
+                        2022-11-22
+                    </span>
                 </div>
             </div>
         </div>
     </div>
 </header>
 
+<!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
 
-
-<!-- Main Content -->
-<div class="container">
-    <div class="row">
-        
-
-<!-- USE SIDEBAR -->
     <!-- Post Container -->
             <div class="
-                col-lg-8 col-lg-offset-1
-                col-md-8 col-md-offset-1
-                col-sm-12
-                col-xs-12
-                post-container
-            ">
-            
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
                 <blockquote>
+<p>随便记点Java特性做备忘。</p>
 </blockquote>
+<h3 id="Java-8-Stream"><a href="#Java-8-Stream" class="headerlink" title="Java 8 Stream"></a>Java 8 Stream</h3><blockquote>
+<p>在树形，分级目录的时候经常看到。</p>
+</blockquote>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Stream</span> &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> &#123;</span><br><span class="line">        <span class="comment">// 1. map</span></span><br><span class="line">        List&lt;Integer&gt; integerList = Arrays.asList(<span class="number">1</span>, <span class="number">2</span>, <span class="number">2</span>, <span class="number">5</span>, <span class="number">7</span>, -<span class="number">3</span>, <span class="number">3</span>);</span><br><span class="line">        List&lt;Integer&gt; integers = integerList.stream().map(i -&gt; i * i).distinct().collect(Collectors.toList());</span><br><span class="line">        <span class="keyword">for</span> (Integer integer : integers) &#123;</span><br><span class="line">            System.out.println(integer);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 1.5. 统计</span></span><br><span class="line">        <span class="type">IntSummaryStatistics</span> <span class="variable">stats</span> <span class="operator">=</span> integerList.stream().mapToInt((x) -&gt; x).summaryStatistics();</span><br><span class="line">        System.out.println(<span class="string">&quot;列表中最大的数 : &quot;</span> + stats.getMax());</span><br><span class="line">        System.out.println(<span class="string">&quot;列表中最小的数 : &quot;</span> + stats.getMin());</span><br><span class="line">        System.out.println(<span class="string">&quot;所有数之和 : &quot;</span> + stats.getSum());</span><br><span class="line">        System.out.println(<span class="string">&quot;平均数 : &quot;</span> + stats.getAverage());</span><br><span class="line">        <span class="comment">// 2. filter</span></span><br><span class="line">        <span class="type">long</span> <span class="variable">count</span> <span class="operator">=</span> integerList.stream().filter(i -&gt; i != <span class="number">2</span>).count();</span><br><span class="line">        System.out.println(count);</span><br><span class="line">        <span class="comment">// 3. limit &amp; forEach</span></span><br><span class="line">        <span class="type">Random</span> <span class="variable">random</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Random</span>();</span><br><span class="line">        random.ints().limit(<span class="number">10</span>).forEach(System.out::println);</span><br><span class="line">        <span class="comment">// 4. sored</span></span><br><span class="line">        random.ints().limit(<span class="number">10</span>).sorted().forEach(System.out::println);</span><br><span class="line">        <span class="comment">// 5. Collectors</span></span><br><span class="line">        List&lt;String&gt; strings = Arrays.asList(<span class="string">&quot;abc&quot;</span>, <span class="string">&quot;&quot;</span>, <span class="string">&quot;bc&quot;</span>, <span class="string">&quot;efg&quot;</span>, <span class="string">&quot;abcd&quot;</span>,<span class="string">&quot;&quot;</span>, <span class="string">&quot;jkl&quot;</span>);</span><br><span class="line">        <span class="type">String</span> <span class="variable">newString</span> <span class="operator">=</span> strings.stream().filter(string -&gt; !string.isEmpty()).collect(Collectors.joining(<span class="string">&quot;,&quot;</span>));</span><br><span class="line">        System.out.println(newString);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 
-                <!-- 如果开启评论功能 -->
+                <hr>
+
                 
-                    <hr>
 
+                <ul class="pager">
                     
-
+                        <li class="previous">
+                            <a href="/2022/11/30/SQL书写建议/" data-toggle="tooltip" data-placement="top" title="SQL书写建议">&larr; Previous Post</a>
+                        </li>
                     
-
-
                     
-
+                        <li class="next">
+                            <a href="/2022/11/20/策略模式/" data-toggle="tooltip" data-placement="top" title="策略模式">Next Post &rarr;</a>
+                        </li>
                     
+                </ul>
 
-
+                
 
                 
 
             </div>
+    <!-- Side Catalog Container -->
+        
+
     <!-- Sidebar Container -->
+
             <div class="
-                col-lg-3 col-lg-offset-0
-                col-md-3 col-md-offset-0
-                col-sm-12
-                col-xs-12
-                sidebar-container
-            ">
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
                 <!-- Featured Tags -->
                 
                 <section>
                     <!-- no hr -->
                     <h5><a href="/tags/">FEATURED TAGS</a></h5>
                     <div class="tags">
-                        
-                            
-                            <a href="/tags/#日常" title="日常" rel="2">日常</a>
-                            
-                        
-                            
-                        
-                            
-                            <a href="/tags/#设计模式" title="设计模式" rel="2">设计模式</a>
-                            
-                        
-                            
-                        
-                            
+                       
+                          <a class="tag" href="/tags/#Java" title="Java">Java</a>
                         
                     </div>
                 </section>
                 
 
-                <!-- Short About -->
-                <section class="visible-md visible-lg">
-                    <hr><h5><a href="/about/">ABOUT ME</a></h5>
-                    <div class="short-about">
-
-                        
-                            <img src="/img/avatar.jpg" />
-                        
-
-                        
-                            <p>学习中</p>
-                        
-
-                        <!-- SNS Link -->
-                        <ul class="list-inline">
-                            
-                            
-                            
-
-                            
-
-                            
-
-                            
-                            
-                            
-                            
-                        </ul>
-                    </div>
-                </section>
-                
                 <!-- Friends Blog -->
                 
                 <hr>
@@ -283,9 +263,51 @@
                 </ul>
                 
             </div>
-        
+
+        </div>
     </div>
-</div>
+</article>
+
+
+
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("https://cdn.bootcss.com/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'always',
+          placement: 'right',
+          icon: '#'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+<style>
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
 
 
     <!-- Footer -->

@@ -190,6 +190,78 @@
 
 <div class="post-preview">
 
+    <a href="/2022/11/30/SQL书写建议/">
+        <h2 class="post-title">
+            SQL书写建议
+        </h2>
+        <h3 class="post-subtitle">
+            
+        </h3>
+        <div class="post-content-preview">
+            SQL书写建议索引失效1. 避免在where子句中使用or连接条件
+可能造成索引失效，导致全表扫描。
+
+123456-- 反例select * from user where user_id = 1 and age = 18;-- 正例select * from user where user_id = 1 union allselect * from user where age = 18......
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by Laiaike on
+        2022-11-30
+    </p>
+
+</div>
+<hr>
+
+<div class="post-preview">
+
+    <a href="/2022/11/22/随便记点/">
+        <h2 class="post-title">
+            post
+        </h2>
+        <h3 class="post-subtitle">
+            
+        </h3>
+        <div class="post-content-preview">
+            
+随便记点Java特性做备忘。
+
+Java 8 Stream
+在树形，分级目录的时候经常看到。
+
+12345678910111213141516171819202122232425262728public class Stream &#123;    public static void main(String[] args) &#123;        // 1. map        L......
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by Laiaike on
+        2022-11-22
+    </p>
+
+</div>
+<hr>
+
+<div class="post-preview">
+
+    <a href="/2022/11/20/策略模式/">
+        <h2 class="post-title">
+            策略模式
+        </h2>
+        <h3 class="post-subtitle">
+            
+        </h3>
+        <div class="post-content-preview">
+            ...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by Laiaike on
+        2022-11-20
+    </p>
+
+</div>
+<hr>
+
+<div class="post-preview">
+
     <a href="/2022/11/20/责任链模式/">
         <h2 class="post-title">
             责任链模式
@@ -314,6 +386,12 @@ LSM-Tree是一种分层，有序，面向磁盘的结构，主要利用的是，
                         
                             
                             <a href="/tags/#日常" title="日常" rel="2">日常</a>
+                            
+                        
+                            
+                        
+                            
+                            <a href="/tags/#设计模式" title="设计模式" rel="2">设计模式</a>
                             
                         
                             
