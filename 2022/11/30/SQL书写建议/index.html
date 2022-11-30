@@ -171,7 +171,7 @@
                 <div class="post-heading">
                     <div class="tags">
                         
-                          <a class="tag" href="/tags/#SQL" title="SQL">SQL</a>
+                          <a class="tag" href="/tags/#数据库" title="数据库">数据库</a>
                         
                     </div>
                     <h1>SQL书写建议</h1>
@@ -205,12 +205,12 @@
 <h4 id="2-优化like语句"><a href="#2-优化like语句" class="headerlink" title="2. 优化like语句"></a>2. 优化like语句</h4><ul>
 <li><p>可能引起索引失效（最左前缀匹配）。</p>
 </li>
-<li><p>使用覆盖索引（无需回表）优化。、</p>
+<li><p>使用覆盖索引（无需回表）优化。</p>
 </li>
 </ul>
 <figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 正例，其中id为主键，user_id为普通索引</span></span><br><span class="line"><span class="keyword">select</span> id, user_id <span class="keyword">from</span> <span class="keyword">user</span> <span class="keyword">where</span> user_id <span class="keyword">like</span> <span class="string">&#x27;%123%&#x27;</span>;</span><br></pre></td></tr></table></figure>
 
-<h4 id="3-尽量避免在索引列上使用MySQL的内置函数"><a href="#3-尽量避免在索引列上使用MySQL的内置函数" class="headerlink" title="3. 尽量避免在索引列上使用MySQL的内置函数"></a>3. 尽量避免在索引列上使用MySQL的内置函数</h4><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 反例</span></span><br><span class="line"><span class="keyword">select</span> user_id, login_time <span class="keyword">from</span> login_info <span class="keyword">where</span> Date_ADD(login_time, <span class="type">Interval</span> <span class="number">7</span> <span class="keyword">DAY</span>) <span class="operator">&gt;=</span>  now();</span><br><span class="line"></span><br><span class="line"><span class="comment">-- 正例，把内置函数移到右边</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">select</span> user_id, login_time <span class="keyword">from</span> login_info <span class="keyword">where</span> login_timDate_ADD(login_time, <span class="type">Interval</span> <span class="number">7</span> <span class="keyword">DAY</span>)</span><br></pre></td></tr></table></figure>
+<h4 id="3-尽量避免在索引列上使用MySQL的内置函数"><a href="#3-尽量避免在索引列上使用MySQL的内置函数" class="headerlink" title="3. 尽量避免在索引列上使用MySQL的内置函数"></a>3. 尽量避免在索引列上使用MySQL的内置函数</h4><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 反例</span></span><br><span class="line"><span class="keyword">select</span> user_id, login_time <span class="keyword">from</span> login_info <span class="keyword">where</span> Date_ADD(login_time, <span class="type">Interval</span> <span class="number">7</span> <span class="keyword">DAY</span>) <span class="operator">&gt;=</span>  now();</span><br><span class="line"></span><br><span class="line"><span class="comment">-- 正例，把内置函数移到右边</span></span><br><span class="line"><span class="keyword">select</span> user_id, login_time <span class="keyword">from</span> login_info <span class="keyword">where</span> login_time <span class="operator">&gt;=</span> Date_ADD(now, <span class="type">Interval</span> <span class="operator">-</span> <span class="number">7</span> <span class="keyword">DAY</span>)</span><br></pre></td></tr></table></figure>
 
 <h4 id="4-避免在where子句中使用表达式-lt-gt-x3D"><a href="#4-避免在where子句中使用表达式-lt-gt-x3D" class="headerlink" title="4. 避免在where子句中使用表达式, &lt;&gt;, !&#x3D;"></a>4. 避免在where子句中使用表达式, &lt;&gt;, !&#x3D;</h4><ul>
 <li><p>造成索引失效，全表扫描。</p>
@@ -222,7 +222,15 @@
 <li>当创建了（a, b, c），相当于创建了（a）（a, b）（a, b, c）三个索引。</li>
 </ul>
 <h4 id="6-where子句中考虑使用默认值代替null"><a href="#6-where子句中考虑使用默认值代替null" class="headerlink" title="6. where子句中考虑使用默认值代替null"></a>6. where子句中考虑使用默认值代替null</h4><ul>
-<li>可能导致索引无效 TODO</li>
+<li>可能导致索引无效。</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 反例</span></span><br><span class="line"><span class="keyword">select</span> <span class="operator">*</span> <span class="keyword">from</span> <span class="keyword">user</span> <span class="keyword">where</span> age <span class="keyword">is</span> <span class="keyword">not</span> <span class="keyword">null</span>;</span><br><span class="line"><span class="comment">-- 正例</span></span><br><span class="line"><span class="keyword">select</span> <span class="operator">*</span> <span class="keyword">from</span> <span class="keyword">user</span> <span class="keyword">where</span> age <span class="operator">&gt;</span> <span class="number">0</span>;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>并不是说使用了is null或者 is not null就会不走索引了，这个跟mysql版本以及查询成本都有关。</li>
+<li>如果mysql优化器发现，走索引比不走索引成本还要高，就会放弃索引，这些条件 !&#x3D;，&lt;&gt;，is null，is not null经常被认为让索引失效。</li>
+<li>一般情况下，查询的成本高，优化器自动放弃索引的。</li>
+<li>如果把null值，换成默认值，很多时候让走索引成为可能。</li>
 </ul>
 <h4 id="7-类型转换"><a href="#7-类型转换" class="headerlink" title="7. 类型转换"></a>7. 类型转换</h4><ul>
 <li>如字段是字符串类型，但是查询的时候使用了数字型，将造成索引失效。</li>
@@ -266,7 +274,13 @@
 <figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> <span class="operator">*</span> <span class="keyword">from</span> A <span class="keyword">where</span> id <span class="keyword">in</span> (<span class="keyword">select</span> id <span class="keyword">from</span> B);</span><br><span class="line"><span class="keyword">select</span> <span class="operator">*</span> <span class="keyword">from</span> A <span class="keyword">where</span> <span class="keyword">exists</span> (<span class="keyword">select</span> <span class="number">1</span> <span class="keyword">from</span> B <span class="keyword">where</span> A.id <span class="operator">=</span> B.id);</span><br></pre></td></tr></table></figure>
 
 <p>如果B的数据量大于A，适合选择exists，如果B的数据量小于A，适合使用in。</p>
-<h4 id="13-尽量使用union-all替换union"><a href="#13-尽量使用union-all替换union" class="headerlink" title="13. 尽量使用union all替换union"></a>13. 尽量使用union all替换union</h4><h4 id="14-索引不宜太多，一般5个以内"><a href="#14-索引不宜太多，一般5个以内" class="headerlink" title="14. 索引不宜太多，一般5个以内"></a>14. 索引不宜太多，一般5个以内</h4><ul>
+<h4 id="13-尽量使用union-all替换union"><a href="#13-尽量使用union-all替换union" class="headerlink" title="13. 尽量使用union all替换union"></a>13. 尽量使用union all替换union</h4><ul>
+<li><p>UNION在进行表链接后会筛选掉重复的记录，所以在表链接后会对所产生的结果集进行排序运算，删除重复的记录再返回结果。如果表数据量大的话可能会导致用磁盘进行排序。</p>
+</li>
+<li><p>推荐方案：采用UNION ALL操作符替代UNION，因为UNION ALL操作只是简单的将两个结果合并后就返回。</p>
+</li>
+</ul>
+<h4 id="14-索引不宜太多，一般5个以内"><a href="#14-索引不宜太多，一般5个以内" class="headerlink" title="14. 索引不宜太多，一般5个以内"></a>14. 索引不宜太多，一般5个以内</h4><ul>
 <li><p>提高了查询效率，降低了插入和更新的效率。TODO</p>
 </li>
 <li><p>insert和update有时可能重建索引。</p>
@@ -288,7 +302,7 @@
                     
                     
                         <li class="next">
-                            <a href="/2022/11/22/随便记点/" data-toggle="tooltip" data-placement="top" title="post">Next Post &rarr;</a>
+                            <a href="/2022/11/22/随便记点/" data-toggle="tooltip" data-placement="top" title="随便记点">Next Post &rarr;</a>
                         </li>
                     
                 </ul>
@@ -315,7 +329,7 @@
                     <h5><a href="/tags/">FEATURED TAGS</a></h5>
                     <div class="tags">
                        
-                          <a class="tag" href="/tags/#SQL" title="SQL">SQL</a>
+                          <a class="tag" href="/tags/#数据库" title="数据库">数据库</a>
                         
                     </div>
                 </section>
