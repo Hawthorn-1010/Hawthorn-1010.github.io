@@ -13,11 +13,11 @@
 
     <title>
         
-          About - Laiaike&#39;s Blog
+          Linux备忘 - Laiaike&#39;s Blog
         
     </title>
 
-    <link rel="canonical" href="https://laiaike.site/about/">
+    <link rel="canonical" href="https://laiaike.site/2023/09/24/Linux备忘/">
 
     <!-- Bootstrap Core CSS -->
     
@@ -153,128 +153,130 @@
 
 
     <!-- Main Content -->
-    <!-- Page Header -->
-<header class="intro-header" style="background-image: url('/img/about-bg.jpg')">
+    
+<!-- Image to hack wechat -->
+<!-- <img src="https://laiaike.site/img/icon_wechat.png" width="0" height="0"> -->
+<!-- <img src="{{ site.baseurl }}/{% if page.header-img %}{{ page.header-img }}{% else %}{{ site.header-img }}{% endif %}" width="0" height="0"> -->
+
+<!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        background-image: url('/img/home-bg.jpg')
+    }
+</style>
+<header class="intro-header" >
     <div class="container">
         <div class="row">
-            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1 ">
-                <div class="site-heading">
-                    <h1>About</h1>
-                    <!--<hr class="small">-->
-                    <span class="subheading">Hi, I&#39;am Laiaike.</span>
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <div class="tags">
+                        
+                          <a class="tag" href="/tags/#Linux" title="Linux">Linux</a>
+                        
+                    </div>
+                    <h1>Linux备忘</h1>
+                    <h2 class="subheading"></h2>
+                    <span class="meta">
+                        Posted by Laiaike on
+                        2023-09-24
+                    </span>
                 </div>
             </div>
         </div>
     </div>
 </header>
 
+<!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
 
-
-<!-- Main Content -->
-<div class="container">
-    <div class="row">
-        
-
-<!-- USE SIDEBAR -->
     <!-- Post Container -->
             <div class="
-                col-lg-8 col-lg-offset-1
-                col-md-8 col-md-offset-1
-                col-sm-12
-                col-xs-12
-                post-container
-            ">
-            
-                <blockquote>
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <h2 id="Linux备忘"><a href="#Linux备忘" class="headerlink" title="Linux备忘"></a>Linux备忘</h2><h3 id="指令"><a href="#指令" class="headerlink" title="指令"></a>指令</h3><h4 id="下载文件"><a href="#下载文件" class="headerlink" title="下载文件"></a>下载文件</h4><p>wget：网络下载一个文件并保存在当前目录</p>
+<h4 id="压缩解压"><a href="#压缩解压" class="headerlink" title="压缩解压"></a>压缩解压</h4><p>tar czf xxx.tar.gz：打包压缩</p>
+<p>tar xzf xxx.tar.gz：预览</p>
+<p>tar tzf xxx.tar.gz：解压解包</p>
+<p>.tar是打包后缀.gz是压缩后缀</p>
+<blockquote>
+<p>-c：（create）建立打包文件</p>
+<p>-t ：查看打包文件的内容含有哪些文件</p>
+<p>-x：解打包或解压缩的功能，可以搭配-C(大写)在特定目录解开</p>
+<p>-j ：通过bzip2的支持进行压缩&#x2F;解压缩，此时文件最好为*.tar.bz2</p>
+<p>-z ：通过gzip的支持进行压缩&#x2F;解压缩，此时文件最好为*.tar.gz</p>
+<p>-v ：在压缩&#x2F;解压缩的过程中，将正在处理的文件名显示出来</p>
+<p>-f filename：-f 后面跟处理后文件的全名称（路径+文件名+后缀名）</p>
+<p>-C 目录：这个选项用在解压缩，若要在特定目录解压缩，可以使用这个选项</p>
+<p>-p：保留备份数据的原本权限与属性，常用于备份(-c)重要的配置文件</p>
+<p>–exclude&#x3D;FILE:在压缩的过程中,不要将那些文件打包</p>
+<p>注意-c, -t, -x 不可同时出现在一串指令列中</p>
 </blockquote>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/m0_67768006/article/details/131227109">Linux下的打包和压缩</a></p>
+<h4 id="查看端口号并终止进程"><a href="#查看端口号并终止进程" class="headerlink" title="查看端口号并终止进程"></a>查看端口号并终止进程</h4><p>netstat -an|grep port</p>
+<p>lsof -i : port</p>
+<p>kill -9 <PID></p>
+<p>区别：<br>1.netstat无权限控制，lsof有权限控制，只能看到本用户<br>2.losf能看到pid和用户，可以找到哪个进程占用了这个端口</p>
+<h4 id="链接"><a href="#链接" class="headerlink" title="链接"></a>链接</h4><p>ln -s &#x2F;usr&#x2F;local&#x2F;nodejs&#x2F;bin&#x2F;cnpm &#x2F;usr&#x2F;local&#x2F;bin&#x2F;cnpm </p>
+<p><a target="_blank" rel="noopener" href="https://www.zhihu.com/question/21265424/answer/2735929857">Linux文件系统中&#x2F;bin、&#x2F;sbin、&#x2F;usr&#x2F;bin、&#x2F;usr&#x2F;sbin、&#x2F;usr&#x2F;local&#x2F;bin、&#x2F;usr&#x2F;local&#x2F;sbin文件夹的区别是什么？</a></p>
+<p><a target="_blank" rel="noopener" href="https://www.ruanyifeng.com/blog/2011/12/inode.html">inode和软硬链接</a></p>
+<h4 id="一些其他的"><a href="#一些其他的" class="headerlink" title="一些其他的"></a>一些其他的</h4><p>ls | grep <name></p>
+<p>clear：清屏</p>
+<p>pwd：当前位置</p>
+<p>tail -f  -5：stream形式，显示后5条</p>
+<h3 id="快捷键"><a href="#快捷键" class="headerlink" title="快捷键"></a>快捷键</h3><p>Ctrl + Shift 切换拼音输入法</p>
+<p>Shift + F4 添加终端</p>
+<p>Ctrl + Shift + C&#x2F;V 终端中复制&#x2F;粘贴</p>
 
 
-                <!-- 如果开启评论功能 -->
+                <hr>
+
                 
-                    <hr>
 
+                <ul class="pager">
                     
-
+                        <li class="previous">
+                            <a href="/2023/09/24/Docker Tutorial for Beginners/" data-toggle="tooltip" data-placement="top" title="Docker Tutorial for Beginners">&larr; Previous Post</a>
+                        </li>
                     
-
-
                     
-
+                        <li class="next">
+                            <a href="/2023/08/21/一篇迟来的大四总结/" data-toggle="tooltip" data-placement="top" title="一篇迟来的大四总结">Next Post &rarr;</a>
+                        </li>
                     
+                </ul>
 
-
+                
 
                 
 
             </div>
+    <!-- Side Catalog Container -->
+        
+
     <!-- Sidebar Container -->
+
             <div class="
-                col-lg-3 col-lg-offset-0
-                col-md-3 col-md-offset-0
-                col-sm-12
-                col-xs-12
-                sidebar-container
-            ">
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
                 <!-- Featured Tags -->
                 
                 <section>
                     <!-- no hr -->
                     <h5><a href="/tags/">FEATURED TAGS</a></h5>
                     <div class="tags">
-                        
-                            
-                            <a href="/tags/#日常" title="日常" rel="3">日常</a>
-                            
-                        
-                            
-                            <a href="/tags/#数据库" title="数据库" rel="2">数据库</a>
-                            
-                        
-                            
-                            <a href="/tags/#设计模式" title="设计模式" rel="2">设计模式</a>
-                            
-                        
-                            
-                        
-                            
-                        
-                            
+                       
+                          <a class="tag" href="/tags/#Linux" title="Linux">Linux</a>
                         
                     </div>
                 </section>
                 
 
-                <!-- Short About -->
-                <section class="visible-md visible-lg">
-                    <hr><h5><a href="/about/">ABOUT ME</a></h5>
-                    <div class="short-about">
-
-                        
-                            <img src="/img/avatar.jpg" />
-                        
-
-                        
-                            <p>学习中</p>
-                        
-
-                        <!-- SNS Link -->
-                        <ul class="list-inline">
-                            
-                            
-                            
-
-                            
-
-                            
-
-                            
-                            
-                            
-                            
-                        </ul>
-                    </div>
-                </section>
-                
                 <!-- Friends Blog -->
                 
                 <hr>
@@ -287,9 +289,51 @@
                 </ul>
                 
             </div>
-        
+
+        </div>
     </div>
-</div>
+</article>
+
+
+
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("https://cdn.bootcss.com/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'always',
+          placement: 'right',
+          icon: '#'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+<style>
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
 
 
     <!-- Footer -->
