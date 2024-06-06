@@ -13,11 +13,11 @@
 
     <title>
         
-          实现小型LSM数据库 - Laiaike&#39;s Blog
+          分布式锁 - Laiaike&#39;s Blog
         
     </title>
 
-    <link rel="canonical" href="https://laiaike.site/2022/05/28/实现小型LSM数据库/">
+    <link rel="canonical" href="https://laiaike.site/2024/04/29/分布式锁/">
 
     <!-- Bootstrap Core CSS -->
     
@@ -171,14 +171,14 @@
                 <div class="post-heading">
                     <div class="tags">
                         
-                          <a class="tag" href="/tags/#数据库" title="数据库">数据库</a>
+                          <a class="tag" href="/tags/#System Design" title="System Design">System Design</a>
                         
                     </div>
-                    <h1>实现小型LSM数据库</h1>
+                    <h1>分布式锁</h1>
                     <h2 class="subheading"></h2>
                     <span class="meta">
                         Posted by Laiaike on
-                        2022-05-28
+                        2024-04-29
                     </span>
                 </div>
             </div>
@@ -197,68 +197,49 @@
                 col-md-10 col-md-offset-1
                 post-container">
 
-                <h4 id="LSM-Tree"><a href="#LSM-Tree" class="headerlink" title="LSM-Tree"></a>LSM-Tree</h4><p>LSM-Tree（Log Structrued-Merge Tree）是很多NoSQL的底层引擎实现，比如LevelDB，HBase，Cassandra等等。</p>
-<p>LSM-Tree是一种分层，有序，面向磁盘的结构，主要利用的是，<strong>磁盘顺序写的速度比随机写高出很多</strong>（两个数量级）。比如Log顺序写入的方法，通过append追加写入。这种结构写入速度很快，但是缺点是它牺牲了部分读性能，对随机读取不友好，所以这种结构更适用于<strong>读少写多</strong>的情景。例如：</p>
+                <h1 id="分布式锁"><a href="#分布式锁" class="headerlink" title="分布式锁"></a>分布式锁</h1><h2 id="主动轮询型"><a href="#主动轮询型" class="headerlink" title="主动轮询型"></a>主动轮询型</h2><h3 id="Redis：SETNX（非阻塞，成功失败都直接返回）"><a href="#Redis：SETNX（非阻塞，成功失败都直接返回）" class="headerlink" title="Redis：SETNX（非阻塞，成功失败都直接返回）"></a>Redis：SETNX（非阻塞，成功失败都直接返回）</h3><p>解锁操作：1. 检查value 2. 删除记录</p>
+<p>要使这个过程原子化，不可拆分，可以使用lua脚本自定义组装同一个redis节点下的多笔操作形成一个具备原子性的事务。</p>
+<h3 id="MySQL"><a href="#MySQL" class="headerlink" title="MySQL"></a>MySQL</h3><ol>
+<li>建立一张表存储分布式锁记录</li>
+<li>基于唯一键的特性</li>
+<li>可以新增一个字段标识使用方身份（先检查释放锁动作执行者的身份，身份合法时才进行解锁）</li>
+</ol>
+<h2 id="主动轮询型存在的问题"><a href="#主动轮询型存在的问题" class="headerlink" title="主动轮询型存在的问题"></a>主动轮询型存在的问题</h2><ol>
+<li>死锁（redisson中通过<strong>watchdog</strong>解决）</li>
+<li>CAP中保证AP，可用性和分区容错性，<strong>数据弱一致性问题</strong>：redisson中使用<strong>redlock</strong>解决</li>
+</ol>
+<p><strong>看门狗</strong>（watch dog）（和etcd租约续约机制相似）</p>
+<p><strong>redlock</strong>：一把红锁，物理意义上有多个锁在不同的节点；多数原则：半数以上</p>
+<p>当一个节点（或进程）尝试获取锁时，它会先尝试在多个不同的节点上获取锁。如果大多数节点都成功获取了锁，那么这个锁就可以视为获取成功，进而执行相应的操作。如果获取锁的节点数量不足，则视为获取失败，需要进行相应的处理。</p>
+<p>具体的实现方式可能会有所不同，但一般包括以下步骤：</p>
 <ol>
-<li><p>数据是被整体访问的，如&#x2F;数据库的WAL机制。</p>
+<li>客户端在多个节点上尝试获取锁。</li>
+<li>每个节点独立判断是否可以获取锁，如果可以则返回成功，否则返回失败。</li>
+<li>客户端根据返回结果来判断是否成功获取锁。</li>
+</ol>
+<h2 id="监听回调型"><a href="#监听回调型" class="headerlink" title="监听回调型"></a>监听回调型</h2><p>etcd：</p>
+<ol>
+<li><p>插入是否成功，插入不成功，在该锁添加监听。（删除的时候只有插入锁的人才可以解锁）</p>
 </li>
-<li><p>数据是通过文件偏移量访问到的，如Kafka。</p>
+<li><p>租约续约机制解决死锁（后台守护协程负责续约，续约前会校验这个锁是否还属于该用户）</p>
+</li>
+<li><p>版本revision用于秩序取锁（锁前缀+递增的版本号，每一个只需监听最近的一个比自己小的版本号，排成队列解锁），避免惊群效应</p>
 </li>
 </ol>
-<h4 id="SSTable"><a href="#SSTable" class="headerlink" title="SSTable"></a>SSTable</h4><p>SSTable（Sorted String Table，排序字符串表）是LSM-Tree中核心的数据结构，具有持久化，有序，不可变的特点。这种结构的好处：</p>
+<p>zk：zab</p>
+<h3 id="zookeeper"><a href="#zookeeper" class="headerlink" title="zookeeper"></a>zookeeper</h3><p>基于 ZooKeeper 的锁与基于 Redis 的锁的不同之处在于 Lock 成功之前会一直<strong>阻塞</strong>，这与我们单机场景中的 <code>mutex.Lock</code> 很相似。</p>
+<p>其原理也是基于<strong>临时 Sequence 节点和 watch API</strong>，例如我们这里使用的是 <code>/lock</code> 节点。Lock 会在该节点下的节点列表中插入自己的值，只要节点下的子节点发生变化，就会通知所有 watch 该节点的程序。这时候程序会检查当前节点下最小的子节点的 id 是否与自己的一致。如果一致，说明加锁成功了。</p>
+<p>这种分布式的阻塞锁比较适合分布式任务调度场景，但不适合高频次持锁时间短的抢锁场景。按照 Google 的 Chubby 论文里的阐述，基于强一致协议的锁适用于 <code>粗粒度</code> 的加锁操作。这里的粗粒度指锁占用时间较长。我们在使用时也应思考在自己的业务场景中使用是否合适。</p>
+<h3 id="etcd"><a href="#etcd" class="headerlink" title="etcd"></a>etcd</h3><p>etcd 中没有像 Zookeeper 那样的 Sequence 节点。所以其锁实现和基于 Zookeeper 实现的有所不同。在上述示例代码中使用的 etcdsync 的 Lock 流程是：</p>
 <ol>
-<li><p>内存中只需要记录稀疏索引，减少了内存索引的大小</p>
-</li>
-<li><p>查询操作无需扫描整个日志，减少了磁盘IO</p>
-</li>
-<li><p>支持区间查询</p>
-</li>
+<li>先检查 <code>/lock</code> 路径下是否有值，如果有值，说明锁已经被别人抢了</li>
+<li>如果没有值，那么写入自己的值。写入成功返回，说明加锁成功。写入时如果节点被其它节点写入过了，那么会导致加锁失败，这时候到 3</li>
+<li><strong>watch</strong> <code>/lock</code> 下的事件，此时陷入阻塞</li>
+<li>当 <code>/lock</code> 路径下发生事件时，当前进程被<strong>唤醒</strong>。检查发生的事件是否是删除事件（说明锁被持有者主动 unlock），或者过期事件（说明锁过期失效）。如果是的话，那么回到 1，走抢锁流程。</li>
 </ol>
 <blockquote>
-<p>密集索引中每一个搜索码值都对应一个索引值，密集索引决定了表的物理排序，一个表只有一个物理排序，所以一个表只能创建一个密集索引。占用存储空间更大，搜索时间更短。</p>
-<p>稀疏索引中只为某些搜索码值创建索引值，占用的存储空间较小，搜索时间更长。</p>
+<p>惊群效应：指多进程（多线程）在同时阻塞等待同一个事件的时候（休眠状态），如果等待的这个事件发生，那么他就会唤醒等待的所有进程（或者线程），但是最终却只能有一个进程（线程）获得这个事件的“控制权”，对该事件进行处理，而其他进程（线程）获取“控制权”失败，只能重新进入休眠状态，这种现象和性能浪费就叫做惊群效应。</p>
 </blockquote>
-<p><img src="/2022/05/28/%E5%AE%9E%E7%8E%B0%E5%B0%8F%E5%9E%8BLSM%E6%95%B0%E6%8D%AE%E5%BA%93/LSM-Tree.png"></p>
-<p>在LSM-Tree中写入数据的步骤如下：</p>
-<ol>
-<li><p>收到写请求时，会先把数据记录到WAL上，用作故障恢复。</p>
-</li>
-<li><p>写完WAL后，写入内存中的SSTable中（删除的话是用墓碑标记），也成为Memtable。</p>
-</li>
-<li><p>Memtable达到一定的大小后会在内存中被冻结，不可变，同时生成一个新的Memtable服务。</p>
-</li>
-<li><p>被冻结的Memtable写入硬盘上的SSTable，这个步骤也叫做Minor Compaction。需要注意的是，L0层的SSTable是没有进行合并的，所以这里的key range在多个SSTable中可能出现重叠。</p>
-</li>
-<li><p>当每层的磁盘上的SSTable的体积超过一定的大小或者个数，也会周期的进行合并。这个步骤也称为Major Compaction，这个阶段会真正的清除掉被标记删除掉的数据以及多版本数据的合并，避免浪费空间。由于SSTable都是有序的，也可以直接采用merge sort进行高效合并。</p>
-</li>
-</ol>
-<p>在LSM-Tree中又是如何读取数据的呢？</p>
-<ul>
-<li>答案是，首先在内存中进行寻找，如果没有查询到，就逐个Level进行查找。</li>
-</ul>
-<p>所以，在寻找的时候的最坏情况是，需要把所有的Level都查询一遍。如果Level的层数多，应该如何进行优化呢？</p>
-<ol>
-<li><p>压缩</p>
-<p>SSTable可以启动压缩功能，不过不是整个SSTable一起压缩，是根据localiy将数据分组后进行压缩。</p>
-</li>
-<li><p>缓存</p>
-<p>SSTable在写入磁盘后，除了Compaction之外，是不会变化的，所以我可以将Scan的Block进行缓存，从而提高检索的效率。</p>
-</li>
-<li><p>索引</p>
-<p>通过布隆过滤器判断一个SSTable是否存在某个key，减少不必要的磁盘扫描。</p>
-</li>
-<li><p>合并</p>
-<p>Compaction可以提高磁盘利用率，但是十分消耗CPU和磁盘IO。</p>
-</li>
-</ol>
-<h4 id="和B-树的比较"><a href="#和B-树的比较" class="headerlink" title="和B+树的比较"></a>和B+树的比较</h4><ul>
-<li><p>在数据的更新和删除方面，B+树支持原地更新删除数据，LSM-Tree只能追加写入。</p>
-</li>
-<li><p>LSM-Tree适用于写多读少的情况，而B+树的设计在读取数据的时候更快，在修改数据的时候，因为涉及索引的维护，页分裂合并等情况，性能会降低。</p>
-</li>
-</ul>
-<h4 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h4><h5 id="SSTable的文件格式"><a href="#SSTable的文件格式" class="headerlink" title="SSTable的文件格式"></a>SSTable的文件格式</h5><p>分为三个区：数据区，稀疏索引区，文件索引区。根据命令，而不是数据进行存储（与持久化有关）。</p>
-<p>写入时 key 会按照任意顺序出现，那么如何保证 SSTable 中的 key 是有序的呢？一个简单方便的方式就是先保存到内存的红黑树（通过TreeMap实现）中，红黑树是有序的，然后再写入到日志文件里面。</p>
 
 
                 <hr>
@@ -268,9 +249,13 @@
                 <ul class="pager">
                     
                         <li class="previous">
-                            <a href="/2022/11/20/责任链模式/" data-toggle="tooltip" data-placement="top" title="责任链模式">&larr; Previous Post</a>
+                            <a href="/2024/05/14/接口幂等性/" data-toggle="tooltip" data-placement="top" title="接口幂等性">&larr; Previous Post</a>
                         </li>
                     
+                    
+                        <li class="next">
+                            <a href="/2024/04/26/分布式唯一id/" data-toggle="tooltip" data-placement="top" title="分布式唯一id">Next Post &rarr;</a>
+                        </li>
                     
                 </ul>
 
@@ -296,7 +281,7 @@
                     <h5><a href="/tags/">FEATURED TAGS</a></h5>
                     <div class="tags">
                        
-                          <a class="tag" href="/tags/#数据库" title="数据库">数据库</a>
+                          <a class="tag" href="/tags/#System Design" title="System Design">System Design</a>
                         
                     </div>
                 </section>

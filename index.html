@@ -96,6 +96,13 @@
 
                         
                         <li>
+                            <a href="/archives/">Archives</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
                             <a href="/about/">About</a>
                         </li>
                         
@@ -104,13 +111,6 @@
                         
                         <li>
                             <a href="/tags/">Tags</a>
-                        </li>
-                        
-                    
-
-                        
-                        <li>
-                            <a href="/archives/">Archives</a>
                         </li>
                         
                     
@@ -187,6 +187,152 @@
             
                 <!-- Main Content -->
 
+
+<div class="post-preview">
+
+    <a href="/2024/06/05/双写一致性/">
+        <h2 class="post-title">
+            双写一致性
+        </h2>
+        <h3 class="post-subtitle">
+            
+        </h3>
+        <div class="post-content-preview">
+            双写一致性集中式缓存的三种缓存读写策略
+Cache Aside
+Read&#x2F;Write Through
+Write Back
+
+数据库和缓存的一致性双写一致性：写db和写redis的一致性，主要是确保更新数据库后，删除缓存这个操作能够正常执行。（可能有另一线程同时读数据，把脏数据读入缓存；也可能是一些网络故障之类的原因，导致删除缓存的操作失败）
+延时双删
+先删除缓存
+更新数据库
+休眠......
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by Laiaike on
+        2024-06-05
+    </p>
+
+</div>
+<hr>
+
+<div class="post-preview">
+
+    <a href="/2024/05/14/接口幂等性/">
+        <h2 class="post-title">
+            接口幂等性
+        </h2>
+        <h3 class="post-subtitle">
+            
+        </h3>
+        <div class="post-content-preview">
+            接口幂等性以支付业务为例，如何保证业务幂等性。
+并发破坏幂等性，破坏了幂等性，所以要做的是：将查询和更改状态操作加锁，将并行操作更改为串行操作
+
+乐观锁：通过版本号version进行判断
+防重表：使用订单号 orderNo 做为去重表的唯一索引
+分布式锁：setnx
+token机制：这种方式分成两个阶段：申请 Token 阶段和支付阶段。
+第一阶段，在进入到提交订单页面之前，需要订单系统根据......
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by Laiaike on
+        2024-05-14
+    </p>
+
+</div>
+<hr>
+
+<div class="post-preview">
+
+    <a href="/2024/04/29/分布式锁/">
+        <h2 class="post-title">
+            分布式锁
+        </h2>
+        <h3 class="post-subtitle">
+            
+        </h3>
+        <div class="post-content-preview">
+            分布式锁主动轮询型Redis：SETNX（非阻塞，成功失败都直接返回）解锁操作：1. 检查value 2. 删除记录
+要使这个过程原子化，不可拆分，可以使用lua脚本自定义组装同一个redis节点下的多笔操作形成一个具备原子性的事务。
+MySQL
+建立一张表存储分布式锁记录
+基于唯一键的特性
+可以新增一个字段标识使用方身份（先检查释放锁动作执行者的身份，身份合法时才进行解锁）
+
+主动轮询型存......
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by Laiaike on
+        2024-04-29
+    </p>
+
+</div>
+<hr>
+
+<div class="post-preview">
+
+    <a href="/2024/04/26/分布式唯一id/">
+        <h2 class="post-title">
+            分布式唯一id
+        </h2>
+        <h3 class="post-subtitle">
+            
+        </h3>
+        <div class="post-content-preview">
+            分布式唯一id1. UUID32个16进制数，128位，8-4-4-4-12
+优点：
+
+性能高，本地生成，无网络消耗
+
+缺点：
+
+不宜存储：太冗长
+基于MAC地址生成，可能造成MAC地址泄露
+无序，不适合当主键，影响性能
+
+2. snowflake1（sign标识位）- 41（时间戳）- 10（workerId，数据中心+工作机器）- 12位自增序列
+缺点：
+生成id可能重复，原因可能为：
+......
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by Laiaike on
+        2024-04-26
+    </p>
+
+</div>
+<hr>
+
+<div class="post-preview">
+
+    <a href="/2024/04/23/Golang测试/">
+        <h2 class="post-title">
+            Golang测试
+        </h2>
+        <h3 class="post-subtitle">
+            
+        </h3>
+        <div class="post-content-preview">
+            Golang测试testing 为 Go 语言 package 提供自动化测试的支持。通过 go test 命令，能够自动执行如下形式的任何函数：
+1func TestXxx(t *testing.T)
+
+测试文件名以_test结尾。
+测试类型12345TestXxxx(t *testing.T)    // 基本测试BenchmarkXxxx(b *testing.B) // 压力测试，N......
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by Laiaike on
+        2024-04-23
+    </p>
+
+</div>
+<hr>
 
 <div class="post-preview">
 
@@ -320,62 +466,16 @@ Java 8 Stream
 </div>
 <hr>
 
-<div class="post-preview">
-
-    <a href="/2022/11/20/责任链模式/">
-        <h2 class="post-title">
-            责任链模式
-        </h2>
-        <h3 class="post-subtitle">
-            
-        </h3>
-        <div class="post-content-preview">
-            责任链模式责任链模式（Chain of Responsibility Pattern）为请求创建了一个接收者对象的链，通常每个接收者都包含对另一个接收者的引用，请求沿着这条链进行处理。
-
-应用实例：jsp servlet 的 Filter，JAVA WEB 中 Apache Tomcat 对 Encoding 的处理，JS 中的事件冒泡。
-
-实现
-创建抽象类AbstractLogger。
-
-......
-        </div>
-    </a>
-    <p class="post-meta">
-        Posted by Laiaike on
-        2022-11-20
-    </p>
-
-</div>
-<hr>
-
-<div class="post-preview">
-
-    <a href="/2022/05/28/实现小型LSM数据库/">
-        <h2 class="post-title">
-            实现小型LSM数据库
-        </h2>
-        <h3 class="post-subtitle">
-            
-        </h3>
-        <div class="post-content-preview">
-            LSM-TreeLSM-Tree（Log Structrued-Merge Tree）是很多NoSQL的底层引擎实现，比如LevelDB，HBase，Cassandra等等。
-LSM-Tree是一种分层，有序，面向磁盘的结构，主要利用的是，磁盘顺序写的速度比随机写高出很多（两个数量级）。比如Log顺序写入的方法，通过append追加写入。这种结构写入速度很快，但是缺点是它牺牲了部分读性能，对......
-        </div>
-    </a>
-    <p class="post-meta">
-        Posted by Laiaike on
-        2022-05-28
-    </p>
-
-</div>
-<hr>
-
 
 
 <!-- Pager -->
 
 <ul class="pager">
     
+    
+        <li class="next">
+            <a href="/page/2/">Older Posts &rarr;</a>
+        </li>
     
 </ul>
 
@@ -401,11 +501,17 @@ LSM-Tree是一种分层，有序，面向磁盘的结构，主要利用的是，
                     <div class="tags">
                         
                             
+                        
+                            
+                        
+                            
+                        
+                            
+                            <a href="/tags/#System Design" title="System Design" rel="4">System Design</a>
+                            
+                        
+                            
                             <a href="/tags/#数据库" title="数据库" rel="2">数据库</a>
-                            
-                        
-                            
-                        
                             
                         
                             

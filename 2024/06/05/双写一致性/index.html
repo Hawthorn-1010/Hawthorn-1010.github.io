@@ -13,11 +13,11 @@
 
     <title>
         
-          实现小型LSM数据库 - Laiaike&#39;s Blog
+          双写一致性 - Laiaike&#39;s Blog
         
     </title>
 
-    <link rel="canonical" href="https://laiaike.site/2022/05/28/实现小型LSM数据库/">
+    <link rel="canonical" href="https://laiaike.site/2024/06/05/双写一致性/">
 
     <!-- Bootstrap Core CSS -->
     
@@ -171,14 +171,14 @@
                 <div class="post-heading">
                     <div class="tags">
                         
-                          <a class="tag" href="/tags/#数据库" title="数据库">数据库</a>
+                          <a class="tag" href="/tags/#System Design" title="System Design">System Design</a>
                         
                     </div>
-                    <h1>实现小型LSM数据库</h1>
+                    <h1>双写一致性</h1>
                     <h2 class="subheading"></h2>
                     <span class="meta">
                         Posted by Laiaike on
-                        2022-05-28
+                        2024-06-05
                     </span>
                 </div>
             </div>
@@ -197,68 +197,30 @@
                 col-md-10 col-md-offset-1
                 post-container">
 
-                <h4 id="LSM-Tree"><a href="#LSM-Tree" class="headerlink" title="LSM-Tree"></a>LSM-Tree</h4><p>LSM-Tree（Log Structrued-Merge Tree）是很多NoSQL的底层引擎实现，比如LevelDB，HBase，Cassandra等等。</p>
-<p>LSM-Tree是一种分层，有序，面向磁盘的结构，主要利用的是，<strong>磁盘顺序写的速度比随机写高出很多</strong>（两个数量级）。比如Log顺序写入的方法，通过append追加写入。这种结构写入速度很快，但是缺点是它牺牲了部分读性能，对随机读取不友好，所以这种结构更适用于<strong>读少写多</strong>的情景。例如：</p>
-<ol>
-<li><p>数据是被整体访问的，如&#x2F;数据库的WAL机制。</p>
-</li>
-<li><p>数据是通过文件偏移量访问到的，如Kafka。</p>
-</li>
+                <h2 id="双写一致性"><a href="#双写一致性" class="headerlink" title="双写一致性"></a>双写一致性</h2><h3 id="集中式缓存的三种缓存读写策略"><a href="#集中式缓存的三种缓存读写策略" class="headerlink" title="集中式缓存的三种缓存读写策略"></a>集中式缓存的三种缓存读写策略</h3><ol>
+<li>Cache Aside</li>
+<li>Read&#x2F;Write Through</li>
+<li>Write Back</li>
 </ol>
-<h4 id="SSTable"><a href="#SSTable" class="headerlink" title="SSTable"></a>SSTable</h4><p>SSTable（Sorted String Table，排序字符串表）是LSM-Tree中核心的数据结构，具有持久化，有序，不可变的特点。这种结构的好处：</p>
-<ol>
-<li><p>内存中只需要记录稀疏索引，减少了内存索引的大小</p>
-</li>
-<li><p>查询操作无需扫描整个日志，减少了磁盘IO</p>
-</li>
-<li><p>支持区间查询</p>
-</li>
-</ol>
+<h3 id="数据库和缓存的一致性"><a href="#数据库和缓存的一致性" class="headerlink" title="数据库和缓存的一致性"></a>数据库和缓存的一致性</h3><p>双写一致性：写db和写redis的一致性，主要是<strong>确保更新数据库后，删除缓存这个操作能够正常执行</strong>。（可能有另一线程同时读数据，把脏数据读入缓存；也可能是一些网络故障之类的原因，导致删除缓存的操作失败）</p>
+<h4 id="延时双删"><a href="#延时双删" class="headerlink" title="延时双删"></a>延时双删</h4><ul>
+<li>先删除缓存</li>
+<li>更新数据库</li>
+<li>休眠一会（比如1秒），再次删除缓存。</li>
+</ul>
+<p>假如A，B两个线程A操作写，B操作读。当A删除缓存之后，这个时候B发生cache miss，就会查询数据库然后更新到缓存。这个时候A更新数据库结束之后再次删除缓存即可，防止刚才B读请求带来的缓存脏数据。</p>
 <blockquote>
-<p>密集索引中每一个搜索码值都对应一个索引值，密集索引决定了表的物理排序，一个表只有一个物理排序，所以一个表只能创建一个密集索引。占用存储空间更大，搜索时间更短。</p>
-<p>稀疏索引中只为某些搜索码值创建索引值，占用的存储空间较小，搜索时间更长。</p>
+<p>休眠时间 &#x3D; B读取业务逻辑数据的耗时 + 几百毫秒</p>
 </blockquote>
-<p><img src="/2022/05/28/%E5%AE%9E%E7%8E%B0%E5%B0%8F%E5%9E%8BLSM%E6%95%B0%E6%8D%AE%E5%BA%93/LSM-Tree.png"></p>
-<p>在LSM-Tree中写入数据的步骤如下：</p>
-<ol>
-<li><p>收到写请求时，会先把数据记录到WAL上，用作故障恢复。</p>
-</li>
-<li><p>写完WAL后，写入内存中的SSTable中（删除的话是用墓碑标记），也成为Memtable。</p>
-</li>
-<li><p>Memtable达到一定的大小后会在内存中被冻结，不可变，同时生成一个新的Memtable服务。</p>
-</li>
-<li><p>被冻结的Memtable写入硬盘上的SSTable，这个步骤也叫做Minor Compaction。需要注意的是，L0层的SSTable是没有进行合并的，所以这里的key range在多个SSTable中可能出现重叠。</p>
-</li>
-<li><p>当每层的磁盘上的SSTable的体积超过一定的大小或者个数，也会周期的进行合并。这个步骤也称为Major Compaction，这个阶段会真正的清除掉被标记删除掉的数据以及多版本数据的合并，避免浪费空间。由于SSTable都是有序的，也可以直接采用merge sort进行高效合并。</p>
-</li>
+<h4 id="重试删除缓存操作"><a href="#重试删除缓存操作" class="headerlink" title="重试删除缓存操作"></a>重试删除缓存操作</h4><ol>
+<li>写请求更新数据库</li>
+<li>缓存因为某些原因，删除失败</li>
+<li>把删除失败的key放到消息队列</li>
+<li>消费消息队列的消息，获取要删除的key</li>
+<li>重试删除缓存操作</li>
 </ol>
-<p>在LSM-Tree中又是如何读取数据的呢？</p>
-<ul>
-<li>答案是，首先在内存中进行寻找，如果没有查询到，就逐个Level进行查找。</li>
-</ul>
-<p>所以，在寻找的时候的最坏情况是，需要把所有的Level都查询一遍。如果Level的层数多，应该如何进行优化呢？</p>
-<ol>
-<li><p>压缩</p>
-<p>SSTable可以启动压缩功能，不过不是整个SSTable一起压缩，是根据localiy将数据分组后进行压缩。</p>
-</li>
-<li><p>缓存</p>
-<p>SSTable在写入磁盘后，除了Compaction之外，是不会变化的，所以我可以将Scan的Block进行缓存，从而提高检索的效率。</p>
-</li>
-<li><p>索引</p>
-<p>通过布隆过滤器判断一个SSTable是否存在某个key，减少不必要的磁盘扫描。</p>
-</li>
-<li><p>合并</p>
-<p>Compaction可以提高磁盘利用率，但是十分消耗CPU和磁盘IO。</p>
-</li>
-</ol>
-<h4 id="和B-树的比较"><a href="#和B-树的比较" class="headerlink" title="和B+树的比较"></a>和B+树的比较</h4><ul>
-<li><p>在数据的更新和删除方面，B+树支持原地更新删除数据，LSM-Tree只能追加写入。</p>
-</li>
-<li><p>LSM-Tree适用于写多读少的情况，而B+树的设计在读取数据的时候更快，在修改数据的时候，因为涉及索引的维护，页分裂合并等情况，性能会降低。</p>
-</li>
-</ul>
-<h4 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h4><h5 id="SSTable的文件格式"><a href="#SSTable的文件格式" class="headerlink" title="SSTable的文件格式"></a>SSTable的文件格式</h5><p>分为三个区：数据区，稀疏索引区，文件索引区。根据命令，而不是数据进行存储（与持久化有关）。</p>
-<p>写入时 key 会按照任意顺序出现，那么如何保证 SSTable 中的 key 是有序的呢？一个简单方便的方式就是先保存到内存的红黑树（通过TreeMap实现）中，红黑树是有序的，然后再写入到日志文件里面。</p>
+<h4 id="同步binlog异步删除缓存"><a href="#同步binlog异步删除缓存" class="headerlink" title="同步binlog异步删除缓存"></a>同步binlog异步删除缓存</h4><p>重试删除缓存操作，会造成业务代码入侵，可以通过数据库的binlog异步淘汰key。</p>
+<p>以<code>mysql</code>为例 可以使用阿里的<code>canal</code>将<code>binlog</code>日志采集发送到<code>MQ</code>(e.g.kafka)里面，然后编写一个简单的缓存删除消息者订阅<code>binlog</code>日志，根据更新log异步操作缓存，并且通过<code>ACK</code>机制确认处理这条更新log，保证数据<code>缓存一致性</code>。</p>
 
 
                 <hr>
@@ -267,10 +229,10 @@
 
                 <ul class="pager">
                     
-                        <li class="previous">
-                            <a href="/2022/11/20/责任链模式/" data-toggle="tooltip" data-placement="top" title="责任链模式">&larr; Previous Post</a>
-                        </li>
                     
+                        <li class="next">
+                            <a href="/2024/05/14/接口幂等性/" data-toggle="tooltip" data-placement="top" title="接口幂等性">Next Post &rarr;</a>
+                        </li>
                     
                 </ul>
 
@@ -296,7 +258,7 @@
                     <h5><a href="/tags/">FEATURED TAGS</a></h5>
                     <div class="tags">
                        
-                          <a class="tag" href="/tags/#数据库" title="数据库">数据库</a>
+                          <a class="tag" href="/tags/#System Design" title="System Design">System Design</a>
                         
                     </div>
                 </section>
